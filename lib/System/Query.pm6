@@ -1,3 +1,5 @@
+unit module System::Parse;
+
 sub follower(@path, $idx, $PTR) {
   die "Attempting to find \$*{@path[0].uc}.{@path[1..*].join('.')}"
     if !$PTR.^can("{@path[$idx]}") && $idx < @path.elems;
@@ -25,7 +27,7 @@ sub merge-tree(@ptr, Bool :$copy = False) {
   @ptr.pop if @ptr.elems > 1;
 }
 
-sub parse(%data, %tree?, @ptr?) is export {
+sub system-collapse(%data, %tree?, @ptr?) is export {
   my ($PTR, @path, @versions, $key);
   my $MAIN = !@ptr.elems;
   @ptr.push(%tree)
@@ -52,7 +54,7 @@ sub parse(%data, %tree?, @ptr?) is export {
     if !$PTR.defined {
       my $ptr-elems = @ptr.elems;
       if %data{$k} ~~ Hash {
-        parse(%data{$k}, %tree, @ptr);
+        system-collapse(%data{$k}, %tree, @ptr);
       } else{
         @ptr.push( %data{$k} );
       }
@@ -76,7 +78,7 @@ sub parse(%data, %tree?, @ptr?) is export {
           ($v<version> cmp $val ~~ Less && $v<suffix> eq '+') ||
           ($v<version> cmp $val ~~ More && $v<suffix> eq '-');
         my $rval = %data{$k}{$v<data-key>} ~~ Hash ??
-          parse(%data{$k}{$v<data-key>}, %tree, @ptr) !!
+          system-collapse(%data{$k}{$v<data-key>}, %tree, @ptr) !!
           %data{$k}{$v<data-key>};
         @ptr.push( $rval );
         merge-tree(@ptr);
@@ -89,7 +91,7 @@ sub parse(%data, %tree?, @ptr?) is export {
       if !$tree.defined {
         @ptr.push( %data{$k} // Nil );
       } else {
-        parse(%data{$k}{$tree}, %tree, @ptr)
+        system-collapse(%data{$k}{$tree}, %tree, @ptr)
           if %data{$k}{$tree} ~~ Hash;
         @ptr.push( %data{$k}{$tree} )
           unless %data{$k}{$tree} ~~ Hash;
