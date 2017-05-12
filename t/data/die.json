@@ -1,6 +1,6 @@
 {
   "options": {
-    "distro.name": {
+    "by-distro.name": {
       "idontexit": "test"
     }
   }

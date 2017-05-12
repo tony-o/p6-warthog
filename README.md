@@ -28,16 +28,16 @@ Calling `parse` with the following JSON will run through and choose what it thin
   },
   "options": {
     "run": {
-      "distro.name": {
+      "by-distro.name": {
         "macosx": {
-          "distro.version": {
+          "by-distro.version": {
             "10.0+": "10make",
             "9.0+": "9make",
             "8.0+": "8make"
           }
         },
         "win32": {
-          "distro.version": {
+          "by-distro.version": {
             "6+": "6winmake",
             "5+": "5winmake" 
           }
@@ -49,7 +49,7 @@ Calling `parse` with the following JSON will run through and choose what it thin
   "default-test": {
     "second-test": "string-val, no decisions",
     "first-test": {
-      "distro.name": {
+      "by-distro.name": {
         "": "default-option1"
       }
     }

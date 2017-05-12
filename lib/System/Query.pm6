@@ -13,36 +13,58 @@ sub merge-tree(@ptr, Bool :$copy = False) {
     if @ptr.elems > 1;
   $vkey //= '';
   if $copy || (@ptr.elems == 2 && @ptr[*-1].keys.elems > 0 && @ptr[*-1]{@ptr[*-1].keys[0]}.defined) { 
-    $vkey = @ptr[*-1].keys[0];
-    @ptr[*-2]{$vkey} = @ptr[*-1]{$vkey};
+    if @ptr[*-1] ~~ Str {
+      @ptr[*-2] = @ptr[*-1];
+    } else { 
+      $vkey = @ptr[*-1].keys[0];
+      @ptr[*-2]{$vkey} = @ptr[*-1]{$vkey};
+    }
   } else {
     @ptr[*-1].keys.map({
       @ptr[*-2]{@ptr[*-2].keys[0]}{$_} = @ptr[*-1]{$_}
         unless $copy;
     }) if @ptr.elems > 1 && @ptr[*-2].keys.elems == 1 && @ptr[*-2]{"$vkey"}.defined && @ptr[*-1] ~~ Hash &&
           !$copy;
-  @ptr[*-2]{@ptr[*-2].keys[0]} = @ptr[*-1]
-    if @ptr.elems > 1 && @ptr[*-2].keys.elems == 1 && !@ptr[*-2]{"$vkey"}.defined;
+    @ptr[*-2]{@ptr[*-2].keys[0]} = @ptr[*-1]
+      if @ptr.elems > 1 && @ptr[*-2].keys.elems == 1 && !@ptr[*-2]{"$vkey"}.defined;
   }
   @ptr.pop if @ptr.elems > 1;
+}
+
+sub data-resolve($world) {
+  if $world ~~ Array {
+    my @action;
+    for @($world) -> $data {
+      if $data ~~ Hash {
+        my $new-item = system-collapse(%($data));
+        @action.push( $new-item );
+        next;
+      }
+      @action.push($data);
+    }
+    return @action;
+  }
+  $world;
 }
 
 sub system-collapse(%data, %tree?, @ptr?) is export {
   my ($PTR, @path, @versions, $key);
   my $MAIN = !@ptr.elems;
+  my $c    = %data.keys.elems;
   @ptr.push(%tree)
     unless @ptr.elems;
   for %data.keys -> $k {
+    $c--;
     merge-tree(@ptr, :copy) 
       if @ptr.elems > 1 && $MAIN;
     given $k {
-      when /^'kernel'/ { 
+      when /^'by-kernel'/ { 
         $PTR = $*KERNEL;
       }
-      when /^'distro'/ {
+      when /^'by-distro'/ {
         $PTR = $*DISTRO;
       }
-      when /^'backend'/ {
+      when /^'by-backend'/ {
         $PTR = $*BACKEND;
       }
       default {
@@ -56,9 +78,9 @@ sub system-collapse(%data, %tree?, @ptr?) is export {
       if %data{$k} ~~ Hash {
         system-collapse(%data{$k}, %tree, @ptr);
       } else{
-        @ptr.push( %data{$k} );
+        @ptr.push( data-resolve(%data{$k}) );
       }
-      merge-tree(@ptr);
+      merge-tree(@ptr, :copy($c == 0 && $MAIN && @ptr.elems <= 2));
       next;
     }
     @path = $k.split('.');
@@ -100,8 +122,8 @@ sub system-collapse(%data, %tree?, @ptr?) is export {
         @ptr.push( %data{$k}{$tree} )
           unless %data{$k}{$tree} ~~ Hash;
       }
-      merge-tree(@ptr);
-      return;
+      merge-tree(@ptr, :copy($c == 0 && $MAIN));
+      return @ptr[0];
     }
   }
   merge-tree(@ptr, :copy) 
