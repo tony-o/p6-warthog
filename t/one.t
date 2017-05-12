@@ -38,5 +38,3 @@ ok $x<nested2><test2> eq 'data2', 'no decision making for $_<nested2><test2>';
 ok $x<default-test><second-test> eq 'string-val, no decisions', '$_<default-test><second-test>';
 ok $x<default-test><first-test> eq 'default-option1', '$_<default-test><first-test> is using the default empty key';
 ok $x<options><run> eq $xrun, '$_<options><run> is set to ' ~ $xrun;
-
-#vim:syn=perl6

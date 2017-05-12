@@ -80,14 +80,18 @@ sub system-collapse(%data, %tree?, @ptr?) is export {
         my $rval = %data{$k}{$v<data-key>} ~~ Hash ??
           system-collapse(%data{$k}{$v<data-key>}, %tree, @ptr) !!
           %data{$k}{$v<data-key>};
+
+        die 'Cannot make a decision ..'
+          if Nil ~~ $rval;
         @ptr.push( $rval );
         merge-tree(@ptr);
-        last;
+        return;
       }
-      return;
     } else {
       @versions = %data{$k}.keys.sort({ $^a eq "" ?? 1 !! $^a cmp $^b }); #sort empty key "" last
       my $tree = @versions.grep($val).first // (%data{$k}{""}.defined ?? "" !! Nil);
+      die 'Cannot make a decision ..'
+        if Nil ~~ $tree;
       if !$tree.defined {
         @ptr.push( %data{$k} // Nil );
       } else {
