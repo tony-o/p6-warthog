@@ -71,7 +71,7 @@ sub system-collapse(%data, %tree?, @ptr?) is export {
           suffix   => $suffix eq '-' || $suffix eq '+' ?? $suffix !! Nil,
           data-key => $_,
         );
-      }).sort.reverse;
+      }).sort({ $^a<version> cmp $^b<version> }).reverse;
       for @version-keys -> $v {
         next unless 
           $v<version> cmp $val ~~ Same ||
