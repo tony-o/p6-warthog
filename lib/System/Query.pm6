@@ -14,7 +14,11 @@ sub system-collapse($data) is export {
   my $return = $data.WHAT.new;
   for $data.keys -> $idx {
     given $idx {
-      when /^'by-distro'/ {
+      when /^'by-' (['distro'|'kernel'|'backend'])/ {
+        my $PTR   = $/[0] eq 'distro' ?? 
+                      $*DISTRO !! $/[0] eq 'kernel' ??
+                      $*KERNEL !! 
+                      $*BACKEND;
         my $path  = $idx.split('.');
         my $value = follower($path, 1, $*DISTRO);
         my $fkey;
