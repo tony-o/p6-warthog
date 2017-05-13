@@ -126,7 +126,8 @@ sub system-collapse(%data, %tree?, @ptr?) is export {
       return @ptr[0];
     }
   }
-  while @ptr.elems > 2 {
+  merge-tree(@ptr); 
+  while $MAIN && @ptr.elems > 2 {
     merge-tree(@ptr);
   }
   merge-tree(@ptr, :copy) 
