@@ -14,6 +14,18 @@ sub system-collapse($data) is export {
   my $return = $data.WHAT.new;
   for $data.keys -> $idx {
     given $idx {
+      when /^'by-env-exists'/ {
+        my $key = $idx.split('.')[1];
+        my $value = %*ENV{$key}:exists ?? 'yes' !! 'no';
+        return system-collapse($data{$idx}{$value}) if $data{$idx}{$value}:exists;
+        die "Unable to resolve path: {$idx} in \%*ENV\nhad: {$value}";
+      }
+      when /^'by-env'/ {
+        my $key = $idx.split('.')[1];
+        my $value = %*ENV{$key};
+        return system-collapse($data{$idx}{$value}) if defined $value and $data{$idx}{$value}:exists;
+        die "Unable to resolve path: {$idx} in \%*ENV\nhad: {$value // ''}";
+      }
       when /^'by-' (['distro'|'kernel'|'backend'])/ {
         my $PTR   = $/[0] eq 'distro' ?? 
                       $*DISTRO !! $/[0] eq 'kernel' ??
